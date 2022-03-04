@@ -26,6 +26,8 @@ import (
 
 var (
 	app *cli.App
+	redisaddr = "localhost:6379"
+	redispassword=""
 )
 
 func init() {
@@ -83,6 +85,10 @@ func startServer() (*machinery.Server, error) {
 	// Create server instance
 	broker := redisbroker.NewGR(cnf, []string{"localhost:6379"}, 0)
 	backend := redisbackend.NewGR(cnf, []string{"localhost:6379"}, 0)
+	/* WRONGPASS invalid username-password pair or user is disabled  USE
+	broker := redisbroker.NewGR_plugin(cnf, redisaddr, 0, redispassword)
+	backend := redisbackend.NewGR_plugin(cnf, redisaddr, 0, redispassword)
+	*/
 	lock := eagerlock.New()
 	server := machinery.NewServer(cnf, broker, backend, lock)
 
