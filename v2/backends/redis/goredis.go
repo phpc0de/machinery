@@ -58,6 +58,33 @@ func NewGR(cnf *config.Config, addrs []string, db int) iface.Backend {
 	return b
 }
 
+func NewGR_plugin(cnf *config.Config, addr string, db int,password string) iface.Backend {
+	b := &BackendGR{
+		Backend: common.NewBackend(cnf),
+	}
+
+b.password =password
+
+	ropt := &redis.UniversalOptions{
+		Addrs:    []string{addr},
+		DB:       db,
+		Password: b.password,
+	}
+	log.INFO.Println(ropt)
+
+	if cnf.Redis != nil {
+		ropt.MasterName = cnf.Redis.MasterName
+	}
+	log.INFO.Println("ropt.MasterName",ropt.MasterName)
+	log.INFO.Println(ropt)
+
+	b.rclient = redis.NewUniversalClient(ropt)
+	log.INFO.Println(b.rclient)
+
+	b.redsync = redsync.New(redsyncgoredis.NewPool(b.rclient))
+	return b
+}
+
 // InitGroup creates and saves a group meta data object
 func (b *BackendGR) InitGroup(groupUUID string, taskUUIDs []string) error {
 	groupMeta := &tasks.GroupMeta{
