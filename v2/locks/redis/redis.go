@@ -48,6 +48,28 @@ func New(cnf *config.Config, addrs []string, db, retries int) Lock {
 	return lock
 }
 
+func New_plugin(cnf *config.Config, addr string, db, retries int, password string) Lock {
+	if retries <= 0 {
+		return Lock{}
+	}
+	lock := Lock{retries: retries}
+
+
+
+	ropt := &redis.UniversalOptions{
+		Addrs:    []string{addr},
+		DB:       db,
+		Password: password,
+	}
+	if cnf.Redis != nil {
+		ropt.MasterName = cnf.Redis.MasterName
+	}
+
+	lock.rclient = redis.NewUniversalClient(ropt)
+
+	return lock
+}
+
 func (r Lock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	for i := 0; i <= r.retries; i++ {
 		err := r.Lock(key, unixTsToExpireNs)
