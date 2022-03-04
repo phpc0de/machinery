@@ -66,6 +66,30 @@ func NewGR(cnf *config.Config, addrs []string, db int) iface.Broker {
 	return b
 }
 
+func NewGR_plugin(cnf *config.Config, addr string, db int,password string) iface.Broker {
+	b := &BrokerGR{Broker: common.NewBroker(cnf)}
+
+
+
+
+	ropt := &redis.UniversalOptions{
+		Addrs:    []string{addr},
+		DB:       db,
+		Password: password,
+	}
+	if cnf.Redis != nil {
+		ropt.MasterName = cnf.Redis.MasterName
+	}
+
+	b.rclient = redis.NewUniversalClient(ropt)
+	if cnf.Redis.DelayedTasksKey != "" {
+		b.redisDelayedTasksKey = cnf.Redis.DelayedTasksKey
+	} else {
+		b.redisDelayedTasksKey = defaultRedisDelayedTasksKey
+	}
+	return b
+}
+
 // StartConsuming enters a loop and waits for incoming messages
 func (b *BrokerGR) StartConsuming(consumerTag string, concurrency int, taskProcessor iface.TaskProcessor) (bool, error) {
 	b.consumingWG.Add(1)
